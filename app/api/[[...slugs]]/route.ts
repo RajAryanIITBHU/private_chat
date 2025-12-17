@@ -1,5 +1,6 @@
 import { redis } from "@/lib/redis";
 import { Elysia, t } from "elysia";
+import { cors } from "@elysiajs/cors";
 import { nanoid } from "nanoid";
 import { authMiddleware } from "./auth";
 import { z } from "zod";
@@ -158,10 +159,25 @@ const public_rooms = new Elysia({ prefix: "/public_rooms" })
     }
   );
 
-const app = new Elysia({ prefix: "/api" }).use(rooms).use(messages).use(public_rooms);
+const app = new Elysia({ prefix: "/api" })
+  .use(
+    cors({
+      origin: [
+        "http://localhost:3000",
+        process.env.NEXT_PUBLIC_API_URL || "",
+      ],
+      methods: ["GET", "POST", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      credentials: true,
+    })
+  )
+  .use(rooms)
+  .use(messages)
+  .use(public_rooms);
 
 export const GET = app.fetch;
 export const POST = app.fetch;
 export const DELETE = app.fetch;
+export const OPTIONS = app.fetch;
 
 export type App = typeof app;

@@ -92,7 +92,12 @@ const RoomContent = ({ roomId }: { roomId: string }) => {
               <Button
                 
                 className="mt-4 z-1 bg-primary/80 hover:bg-primary/60 border-none backdrop-blur-sm text-foreground!"
-                onClick={handleCopy}
+                onClick={()=> {
+                  navigator.share({
+                    title: "Join my private chat room!",
+                    url: `${window.location.origin}/room/${roomId}`,
+                  });
+                }}
               >
                 <span className="mr-2 uppercase">share</span>
                 <LinkIcon size={16} />
