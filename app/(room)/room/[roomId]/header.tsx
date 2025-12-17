@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { client } from "@/lib/eden";
 import { cn } from "@/lib/utils";
+import { formatTimeRemaining } from "@/utils/formatTimeRemaining";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Bomb, Copy } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -60,16 +61,12 @@ const RoomHeader = ({ roomId }: { roomId: string }) => {
     setTimeout(() => setCopyStatus("copy"), 2000);
   };
 
-  function formatTimeRemaining(seconds: number) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  }
+
 
   return (
-    <header className="border-b border-border py-4 px-6  bg-secondary/30 backdrop-blur-sm ">
-      <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
-        {" "}
+    <header className="sticky top-0 border-b border-border py-4 px-6  bg-secondary/30 backdrop-blur-sm z-10">
+      <div className="max-w-4xl mx-auto w-full flex items-center justify-between">
+     
         <div className="flex items-center  gap-8 flex-1">
           <div className="flex flex-col gap-1">
             <span className="uppercase text-muted-foreground/80 text-xs">

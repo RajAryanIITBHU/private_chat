@@ -5,23 +5,39 @@ import { useUsername } from "@/hooks/useUsername";
 import { client } from "@/lib/eden";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
-import { Copy, RefreshCcw, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { RefreshCcw, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
-const Lobby = () => {
+const Lobby = ({ searchParams }: { searchParams: { error?: string; destroyed?: string } }) => {
   const { user, refreshUsername } = useUsername();
   const router = useRouter();
   const [isRoomCreating, setIsRoomCreating] = useState(false);
-  const searchParams = useSearchParams();
-  const wasDestroyed = searchParams.get("destroyed") === "true";
-  const error = searchParams.get("error");
+  const [selectedDuration, setSelectedDuration] = useState(10);
+  const [selectedPeople, setSelectedPeople] = useState(2);
+  const [selectedVisibility, setSelectedVisibility] = useState("Private");
+
+  const wasDestroyed = searchParams?.destroyed === "true";
+  const error = searchParams?.error;
 
   const { mutate: createRoom } = useMutation({
     mutationFn: async () => {
       setIsRoomCreating(true);
-      const res = await client.room.create.post();
+      const res = await client.room.create.post({
+        duration: selectedDuration,
+        people: selectedPeople,
+        visibility: selectedVisibility,
+      });
+
+      setIsRoomCreating(false);
 
       if (res.status === 200) {
         if (res.data && res.data.roomId) {
@@ -38,9 +54,11 @@ const Lobby = () => {
   });
 
   return (
-    <main className="relative w-full min-h-screen flex flex-col justify- items-center p-6">
+    <main className="relative w-full min-h-screen flex flex-col py-14 items-center px-6">
+     
+
       {/* Error Block */}
-      <div className="relative w-full max-w-md h-48 py-4">
+      <div className="relative w-full max-w-md h-36 py-4">
         {(wasDestroyed ||
           error === "room_not_found" ||
           error === "room_full") && (
@@ -95,7 +113,7 @@ const Lobby = () => {
         </div>
         <Card className="w-full p-4">
           <h3 className="text-muted-foreground/80">Your Identity :)</h3>
-          <div className="relative flex justify-between items-center p-3 border bg-background min-h-16 group">
+          <div className="relative flex justify-between items-center p-2 border bg-background min-h-14 group">
             <span className="text-foreground/80">{user ? user : "..."}</span>
             <Button
               variant={"ghost"}
@@ -110,6 +128,117 @@ const Lobby = () => {
             >
               <RefreshCcw className="size-4 text-accent-foreground/60" />
             </Button>
+          </div>
+          <div className="relative flex justify-between items-center px-2 gap-4 mb-1 flex-wrap">
+            <div className="flex-1 flex flex-col gap-2">
+              <span className="text-muted-foreground/80 text-xs">
+                Duration:{" "}
+              </span>
+              <Select
+                defaultValue={selectedDuration.toString()}
+                value={selectedDuration.toString()}
+                onValueChange={(val) => setSelectedDuration(parseInt(val))}
+              >
+                <SelectTrigger className="p-1! h-fit! text-xs!">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value="5"
+                    className="text-xs!"
+                    onSelect={() => setSelectedDuration(5)}
+                  >
+                    5 minutes
+                  </SelectItem>
+                  <SelectItem
+                    value="10"
+                    className="text-xs!"
+                    onSelect={() => setSelectedDuration(10)}
+                  >
+                    10 minutes
+                  </SelectItem>
+                  <SelectItem
+                    value="30"
+                    className="text-xs!"
+                    onSelect={() => setSelectedDuration(30)}
+                  >
+                    30 minutes
+                  </SelectItem>
+                  <SelectItem
+                    value="60"
+                    className="text-xs!"
+                    onSelect={() => setSelectedDuration(60)}
+                  >
+                    60 minutes
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 flex flex-col gap-2">
+              <span className="text-muted-foreground/80 text-xs">People: </span>
+              <Select
+                defaultValue={selectedPeople.toString()}
+                value={selectedPeople.toString()}
+                onValueChange={(val) => setSelectedPeople(parseInt(val))}
+              >
+                <SelectTrigger className="p-1! h-fit! text-xs!">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value="2"
+                    className="text-xs!"
+                    onSelect={() => setSelectedPeople(2)}
+                  >
+                    2 People
+                  </SelectItem>
+                  <SelectItem
+                    value="5"
+                    className="text-xs!"
+                    onSelect={() => setSelectedPeople(5)}
+                  >
+                    5 People
+                  </SelectItem>
+                  <SelectItem
+                    value="10"
+                    className="text-xs!"
+                    onSelect={() => setSelectedPeople(10)}
+                  >
+                    10 People
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 flex flex-col gap-2">
+              <span className="text-muted-foreground/80 text-xs">
+                Visibility:{" "}
+              </span>
+              <Select
+                defaultValue={selectedVisibility}
+                value={selectedVisibility}
+                onValueChange={(val) => setSelectedVisibility(val)}
+              >
+                <SelectTrigger className="p-1! h-fit! text-xs!">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value="Private"
+                    className="text-xs!"
+                    onSelect={() => setSelectedVisibility("Private")}
+                  >
+                    Private
+                  </SelectItem>
+                  <SelectItem
+                    value="Public"
+                    className="text-xs!"
+                    onSelect={() => setSelectedVisibility("Public")}
+                  >
+                    Public
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <Button
             onClick={() => createRoom()}

@@ -5,20 +5,30 @@ import { authMiddleware } from "./auth";
 import { z } from "zod";
 import { Message, realtime } from "@/lib/realtime";
 
-const ROOM_EXPIRY_SECONDS = 60 * 10; // 10 mins
-
 const rooms = new Elysia({ prefix: "/room" })
-  .post("/create", async () => {
+  .post("/create", async ({body}) => {
     const roomId = nanoid();
 
+    const { duration, people, visibility } = body;
+
+    // Store room metadata
     await redis.hset(`meta:${roomId}`, {
       connected: [],
       createdAt: Date.now(),
+      duration,
+      people,
+      visibility,
     });
 
-    await redis.expire(`meta:${roomId}`, ROOM_EXPIRY_SECONDS);
+    await redis.expire(`meta:${roomId}`, duration * 60);
 
     return { roomId };
+  },{
+    body: z.object({
+      duration: z.number(),
+      people: z.number(),
+      visibility: z.string(),
+    }),
   })
   .use(authMiddleware)
   .get(
@@ -118,7 +128,37 @@ const messages = new Elysia({ prefix: "/messages" })
     }
   );
 
-const app = new Elysia({ prefix: "/api" }).use(rooms).use(messages);
+const public_rooms = new Elysia({ prefix: "/public_rooms" })
+  .get(
+    "/",
+    async () => {
+      const keys = await redis.keys("meta:*");
+      const rooms = [];
+      for (const key of keys) {
+        const roomId = key.split(":")[1];
+        const meta = await redis.hgetall<MetaData>(key);
+        
+        if(!meta){
+          continue;
+        }
+
+        if (meta.visibility === "Public") {
+          const ttl = await redis.ttl(key);
+          if (ttl <= 0 || meta.people <= meta.connected.length) {
+            continue;
+          }
+          rooms.push({
+            roomId,
+            ttl,
+            ...meta,
+          });
+        }
+      }
+      return { rooms };
+    }
+  );
+
+const app = new Elysia({ prefix: "/api" }).use(rooms).use(messages).use(public_rooms);
 
 export const GET = app.fetch;
 export const POST = app.fetch;

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { redis } from "./lib/redis";
 import { nanoid } from "nanoid";
 
+
+
 export const proxy =async (req: NextRequest)=> {
     // OVERVIEW: 
     const pathname = req.nextUrl.pathname;
@@ -12,7 +14,7 @@ export const proxy =async (req: NextRequest)=> {
 
     const roomId = roomMatch[1];
 
-    const meta = await  redis.hgetall<{connected: string[], createdAt: number}>(`meta:${roomId}`);
+    const meta = await  redis.hgetall<MetaData>(`meta:${roomId}`);
 
     if(!meta){
         return NextResponse.redirect(new URL("/?error=room_not_found", req.url));
@@ -23,7 +25,7 @@ export const proxy =async (req: NextRequest)=> {
         return NextResponse.next();
     }
  
-    if(meta.connected.length >= 2){
+    if(meta.connected.length >= meta.people){
         return NextResponse.redirect(new URL("/?error=room_full", req.url));
     }
 

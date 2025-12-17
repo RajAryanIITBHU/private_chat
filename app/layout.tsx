@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -23,10 +25,10 @@ export default function RootLayout({
 }>) {
   return (
     <html className="dark" lang="en">
-      <body className={`${jetbrainsMono.className} antialiased`}>
+      <body className={`${jetbrainsMono.className} relative antialiased`}>
         <Providers>
           <FlickeringGrid
-            className="absolute inset-0 z-0 size-full object-contain"
+            className="fixed top-0 left-0 right-0 bottom-0 -z-10 size-full object-contain"
             squareSize={4}
             gridGap={6}
             color="#6B7280"
@@ -46,6 +48,7 @@ export default function RootLayout({
               },
             }}
           />
+         
           {children}
         </Providers>
       </body>
